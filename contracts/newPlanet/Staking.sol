@@ -40,15 +40,15 @@ contract StakingRewards is IStakingRewards {
 
     /* ========== STATE VARIABLES ========== */
 
-    address public shitboxAddress = 0x20d039B1059c6F9B43b3E4D203D4984a1f89A893;
+    address public shitboxAddress = 0x0E31f19aF16103162401345Af527017F2ef62F59;
     ShitBox shitbox = ShitBox(shitboxAddress);
 
      // TODO
-    address _rewardsToken = address(0x48bDecFd8591bC1055A6c59cf663EafAD060A38D);
+    address _rewardsToken = address(0x701D385f4ea6aCf1759FE15CF54436B3e9caB713);
     IERC20 public rewardsToken = IERC20(_rewardsToken);
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 7 days;
+    uint256 public rewardsDuration = 90 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 

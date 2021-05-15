@@ -12,8 +12,8 @@ import "./vrf_on_bsc_testnet.sol";
 contract ShitBox is ERC721 {
     using SafeMath for uint256;
 
-    address usdtAddress = 0x01C56A54fE2B463DEF3c581698F71456F35ad102;
-    address shitAddress = 0x48bDecFd8591bC1055A6c59cf663EafAD060A38D;
+    address usdtAddress = 0x775600571C32A61c665B1531284Ec91bA85078A9;
+    address shitAddress = 0x701D385f4ea6aCf1759FE15CF54436B3e9caB713;
     address pancakeRouterAddr = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address vrfAddr = address(0x0);
     uint256 upgradePrice = 100000000000000000000; // 100 $SHIT
@@ -58,10 +58,10 @@ contract ShitBox is ERC721 {
         rand = rand.mod(100);
         uint256 quality = 0;
         
-        if (rand > 95) quality = miningPower.mul(5);
-        else if (rand > 85) quality = miningPower.mul(4);
-        else if (rand > 65) quality = miningPower.mul(3);
-        else if (rand > 35) quality = miningPower.mul(2);
+        if (rand > 95) quality = 5;
+        else if (rand > 85) quality = 4;
+        else if (rand > 65) quality = 3;
+        else if (rand > 35) quality = 2;
         else quality = 1;
 
         uint256 boxId = _getNextBoxId();
@@ -87,8 +87,8 @@ contract ShitBox is ERC721 {
 
         uint256 currentMiningPower = boxes[boxId].miningPower;
         uint256 currentBonusPower = boxes[boxId].bonusPower;
-        boxes[boxId].miningPower = currentMiningPower.add(bonus);
-        boxes[boxId].bonusPower = currentBonusPower.add(bonus);
+        boxes[boxId].miningPower = currentMiningPower.add(bonus.mul(10**18));
+        boxes[boxId].bonusPower = currentBonusPower.add(bonus.mul(10**18));
     }
 
     function _getRand() private returns (uint) {
@@ -105,7 +105,7 @@ contract ShitBox is ERC721 {
 
     function _magic(address tokenAddress, uint256 amount) private returns (uint256) {
         // transfer 50% to 0xdead
-        IERC20 token = IERC20(tokenAddress);
+        ERC20 token = ERC20(tokenAddress);
         uint256 burnAmount = amount.mul(50).div(100);
         require(token.transfer(address(0xdead), burnAmount), "Insufficient funds");
         // swap 50% to USDT
@@ -140,7 +140,7 @@ contract ShitBox is ERC721 {
     }
 
     function skim(address tokenAddress) public {
-        IERC20 token = IERC20(tokenAddress);
+        ERC20 token = ERC20(tokenAddress);
         token.transfer(msg.sender, token.balanceOf(address(this)));
     }
 
