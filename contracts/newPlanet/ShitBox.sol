@@ -4,6 +4,7 @@ pragma solidity ^0.6.2;
 
 import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/token/ERC721/ERC721.sol';
 import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/math/SafeMath.sol';
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/token/ERC20/ERC20.sol";
 import './IUniswapV2Router02.sol';
 import './Shit.sol';
 import "./vrf_on_bsc_testnet.sol";
@@ -11,16 +12,15 @@ import "./vrf_on_bsc_testnet.sol";
 contract ShitBox is ERC721 {
     using SafeMath for uint256;
 
-    address usdtAddress = address(0x0);
-    address shitAddress = address(0x0);
-    address pancakeFactoryAddr = address(0x0);
-    address pancakeRouterAddr = address(0x0);
+    address usdtAddress = 0x01C56A54fE2B463DEF3c581698F71456F35ad102;
+    address shitAddress = 0x48bDecFd8591bC1055A6c59cf663EafAD060A38D;
+    address pancakeRouterAddr = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address vrfAddr = address(0x0);
     uint256 upgradePrice = 100000000000000000000; // 100 $SHIT
     uint256 burnedCounter = 0;
 
     Shit shit = Shit(shitAddress);
-    IERC20 usdt = IERC20(usdtAddress);
+    ERC20 usdt = ERC20(usdtAddress);
     IUniswapV2Router02 router = IUniswapV2Router02(pancakeRouterAddr);
     
     struct Box {
@@ -92,7 +92,8 @@ contract ShitBox is ERC721 {
     }
 
     function _getRand() private returns (uint) {
-        return _getRandom(block.timestamp, vrfAddr);
+        // return _getRandom(block.timestamp, vrfAddr);
+        return 98657;
     }
     
     // TODO: replace this with chainlink VRF
@@ -109,29 +110,32 @@ contract ShitBox is ERC721 {
         require(token.transfer(address(0xdead), burnAmount), "Insufficient funds");
         // swap 50% to USDT
         address bridgeToken = shit.getBridgeToken(tokenAddress);
-        address[] memory path = new address[](3);
-        path[0] = tokenAddress;
-        if(bridgeToken != usdtAddress) {
-            path[1] = bridgeToken;
-        }
-        if(path[1] != address(0x0)){
-            path[2] = usdtAddress;   
-        }else{
-            path[1] = usdtAddress;
-        }
+        address[] memory path00 = new address[](2);
+        address[] memory path01 = new address[](3);
+        path00[0] = tokenAddress;
+        path00[1] = usdtAddress;
+        
+        path01[0] = tokenAddress;
+        path01[1] = bridgeToken;
+        path01[2] = usdtAddress;
+       
         token.approve(pancakeRouterAddr, uint(-1));
-        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount.sub(burnAmount), 0, path, address(this), block.timestamp + 500);
+        if(bridgeToken == usdtAddress) {
+            router.swapExactTokensForTokens(amount.sub(burnAmount), 0, path00, address(this), block.timestamp + 500);
+        } else {
+            router.swapExactTokensForTokens(amount.sub(burnAmount), 0, path01, address(this), block.timestamp + 500);
+        }
         uint256 usdtValue = usdt.balanceOf(address(this));
         // swap 25% to $SHIT
         address[] memory path1 = new address[](2);
         path1[0] = usdtAddress;
         path1[1] = shitAddress;
-        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(usdtValue.mul(50).div(100), 0, path1, address(this), block.timestamp + 500);
+        router.swapExactTokensForTokens(usdtValue.mul(50).div(100), 0, path1, address(this), block.timestamp + 500);
         uint256 usdtBalance = usdt.balanceOf(address(this));
         uint256 shitBalance = shit.balanceOf(address(this));
         // add liquidity for SHIT/USDT
-        router.addLiquidity(tokenAddress, usdtAddress, usdtBalance, shitBalance, 0, 0, address(0xdead), block.timestamp + 500);
-
+        router.addLiquidity(usdtAddress, shitAddress, usdtBalance, shitBalance, 0, 0, address(0xdead), block.timestamp + 500);
+        
         return usdtValue;
     }
 
