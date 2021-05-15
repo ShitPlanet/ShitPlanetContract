@@ -12,10 +12,10 @@ import "./vrf_on_bsc_testnet.sol";
 contract ShitBox is ERC721 {
     using SafeMath for uint256;
 
-    address usdtAddress = 0x775600571C32A61c665B1531284Ec91bA85078A9;
-    address shitAddress = 0x701D385f4ea6aCf1759FE15CF54436B3e9caB713;
-    address pancakeRouterAddr = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    address vrfAddr = address(0x0);
+    address usdtAddress = 0x55d398326f99059fF775485246999027B3197955;
+    address shitAddress = 0x2Ee8908E893d3ebEA14c87A5d85f78850c6192FA;
+    address pancakeRouterAddr = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+    address vrfAddr = address(0x0); 
     uint256 upgradePrice = 100000000000000000000; // 100 $SHIT
     uint256 burnedCounter = 0;
 
@@ -93,7 +93,7 @@ contract ShitBox is ERC721 {
 
     function _getRand() private returns (uint) {
         // return _getRandom(block.timestamp, vrfAddr);
-        return 98657;
+        return uint(blockhash(block.number - 1));
     }
     
     // TODO: replace this with chainlink VRF
