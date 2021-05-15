@@ -15,7 +15,7 @@ contract Shit is ERC20{
     
     address[] public shitTokenList;
     
-    uint[] public rangeValue = [1, 10, 100, 1000, 10000, 100000];
+    uint256[] public rangeValue = [1, 10, 100, 1000, 10000, 100000];
 
     constructor() public ERC20("ShitPlanet","SHIT"){
         governance = tx.origin;

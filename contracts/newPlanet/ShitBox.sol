@@ -15,7 +15,8 @@ contract ShitBox is ERC721 {
     address shitAddress = address(0x0);
     address pancakeFactoryAddr = address(0x0);
     address pancakeRouterAddr = address(0x0);
-    uint256 upgradePrice = 10000000000000000000; // 10 $SHIT
+    address vrfAddr = address(0x0);
+    uint256 upgradePrice = 100000000000000000000; // 100 $SHIT
     uint256 burnedCounter = 0;
 
     Shit shit = Shit(shitAddress);
@@ -27,7 +28,10 @@ contract ShitBox is ERC721 {
         address shiter;
         address tokenAddress;
         uint256 amount;
-        
+        uint256 initUSDValue;
+        uint256 quality; 
+
+        uint256 bonusPower;
         uint256 miningPower;
     }
     mapping(uint256 => Box) boxes;
@@ -49,20 +53,46 @@ contract ShitBox is ERC721 {
         
         // burn 50%, swap 25% to $SHIT, 25% to USDT, add liquidity for $SHIT
         uint256 miningPower = _magic(tokenAddress, amount);
+        // VRF 
+        uint256 rand = _getRand();
+        rand = rand.mod(100);
+        uint256 quality = 0;
         
+        if (rand > 95) quality = miningPower.mul(5);
+        else if (rand > 85) quality = miningPower.mul(4);
+        else if (rand > 65) quality = miningPower.mul(3);
+        else if (rand > 35) quality = miningPower.mul(2);
+        else quality = 1;
+
         uint256 boxId = _getNextBoxId();
-        boxes[boxId] = Box(boxId, msg.sender, tokenAddress, amount, miningPower);
+        boxes[boxId] = Box(boxId, msg.sender, tokenAddress, amount, miningPower, quality, 0, miningPower.mul(quality));
         _mint(msg.sender, boxId);
     }
 
     function upgradeShitBox(uint256 boxId) public {
+        require(msg.sender == tx.origin); // ban contract call
         require(shit.transferFrom(msg.sender, address(0xdead), upgradePrice), "insufficient shit");
         require(boxes[boxId].shiter != address(0x0));
         
-        // TODO
-        uint256 rand = 1;
+        // Link VRF Supported next version
+        
+        uint256 rand = uint256(blockhash(block.number-1)).mod(1000);
+        
+        uint256 bonus = 0;
+
+        if (rand > 998) bonus = 100000;
+        else if (rand > 979) bonus = 10000;
+        else if (rand > 800) bonus = 1000;
+        else bonus = 100;
+
         uint256 currentMiningPower = boxes[boxId].miningPower;
-        boxes[boxId].miningPower = currentMiningPower.add(rand);
+        uint256 currentBonusPower = boxes[boxId].bonusPower;
+        boxes[boxId].miningPower = currentMiningPower.add(bonus);
+        boxes[boxId].bonusPower = currentBonusPower.add(bonus);
+    }
+
+    function _getRand() private returns (uint) {
+        return _getRandom(block.timestamp, vrfAddr);
     }
     
     // TODO: replace this with chainlink VRF
