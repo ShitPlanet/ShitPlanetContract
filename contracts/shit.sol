@@ -32,17 +32,18 @@ contract ERC20 is Context, IERC20 {
     mapping (address => mapping (address => uint)) private _allowances;
 
     uint private _totalSupply;
-    function totalSupply() public override view returns (uint) {
+    
+    function totalSupply() public view override returns (uint) {
         return _totalSupply;
     }
-    function balanceOf(address account) public override view returns (uint) {
+    function balanceOf(address account) public view override returns (uint) {
         return _balances[account];
     }
     function transfer(address recipient, uint amount) public override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
-    function allowance(address owner, address spender) public override view returns (uint) {
+    function allowance(address owner, address spender) public view override returns (uint) {
         return _allowances[owner][spender];
     }
     function approve(address spender, uint amount) public override returns (bool) {
@@ -93,7 +94,7 @@ contract ERC20 is Context, IERC20 {
     }
 }
 
-contract ERC20Detailed is IERC20 {
+contract ERC20Detailed {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
@@ -202,12 +203,16 @@ contract Shit is ERC20, ERC20Detailed {
   
   address public governance;
   mapping (address => bool) public shitTokens;
-  mapping (address => address) public bridges;
+  mapping (address => address) public bridges; 
 
   address[] public shitTokenList;
+  // The value determines the kind of nft
+  // The array control the interval of rangevalue which could be supported to change by shitdao
+  uint[] public rangeValue = [1, 10, 100, 1000, 10000, 100000];
 
   constructor () public ERC20Detailed("ShitHole", "SHIT", 18) {
       governance = tx.origin;
+
       _mint(msg.sender, 1000000000000000000);
   }
 
@@ -239,5 +244,9 @@ contract Shit is ERC20, ERC20Detailed {
   function setGovernance(address _governance) public {
       require(msg.sender == governance, "!governance");
       governance = _governance;
+  }
+
+  function getRange() public view returns (uint[] memory){
+      return rangeValue;
   }
 }
