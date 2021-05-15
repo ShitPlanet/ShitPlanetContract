@@ -2320,16 +2320,16 @@ contract RandomNumberConsumer is VRFConsumerBase {
     // TODO
     // function withdrawLink() external {} - Implement a withdraw function to avoid locking your LINK in the contract
 }
-
+pragma experimental ABIEncoderV2;
 contract ShitBox is ERC721 {
     using SafeMath for uint256;
 
-    address usdtAddress = 0x55d398326f99059fF775485246999027B3197955;
-    address shitAddress = 0x2Ee8908E893d3ebEA14c87A5d85f78850c6192FA;
-    address pancakeRouterAddr = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
-    address vrfAddr = address(0x0); 
-    uint256 upgradePrice = 100000000000000000000; // 100 $SHIT
-    uint256 burnedCounter = 0;
+    address public usdtAddress = 0x55d398326f99059fF775485246999027B3197955;
+    address public shitAddress = 0xa63190F5da411fFE60c0a70E9EAc95cCD5e626be;
+    address public pancakeRouterAddr = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+    address public vrfAddr = address(0x0); 
+    uint256 public upgradePrice = 100000000000000000000; // 100 $SHIT
+    uint256 public burnedCounter = 0;
 
     Shit shit = Shit(shitAddress);
     ERC20 usdt = ERC20(usdtAddress);
@@ -2345,8 +2345,9 @@ contract ShitBox is ERC721 {
 
         uint256 bonusPower;
         uint256 miningPower;
+		uint256 timestamp;
     }
-    mapping(uint256 => Box) boxes;
+    mapping(uint256 => Box) public boxes;
 
     constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) public {
         shit.approve(pancakeRouterAddr, uint(-1));
@@ -2356,6 +2357,30 @@ contract ShitBox is ERC721 {
     function getMiningPower(uint256 boxId) public view returns (uint256) {
         return boxes[boxId].miningPower;
     }
+    
+	function getBoxInfo(uint256 boxId) public view returns(Box memory) {
+		return boxes[boxId];
+	}
+	
+	function getBoxToken(uint256 boxId) public view returns(address) {
+		return boxes[boxId].tokenAddress;
+	}
+	
+	function getBoxTokenAmount(uint256 boxId) public view returns(uint256) {
+		return boxes[boxId].amount;
+	}
+	function getBoxTokenUSDValue(uint256 boxId) public view returns(uint256) {
+		return boxes[boxId].initUSDValue;
+	}
+	function getBoxQuality(uint256 boxId) public view returns(uint256) {
+		return boxes[boxId].quality;
+	}
+	function getBoxBonusPower(uint256 boxId) public view returns(uint256) {
+		return boxes[boxId].bonusPower;
+	}
+	function getBoxTimestamp(uint256 boxId) public view returns(uint256) {
+		return boxes[boxId].timestamp;
+	}
     
     function mintShitBox(address tokenAddress, uint256 amount) public {
         require(shit.isShitToken(tokenAddress));
@@ -2377,7 +2402,7 @@ contract ShitBox is ERC721 {
         else quality = 1;
 
         uint256 boxId = _getNextBoxId();
-        boxes[boxId] = Box(boxId, msg.sender, tokenAddress, amount, miningPower, quality, 0, miningPower.mul(quality));
+        boxes[boxId] = Box(boxId, msg.sender, tokenAddress, amount, miningPower, quality, 0, miningPower.mul(quality), block.timestamp);
         _mint(msg.sender, boxId);
     }
 
