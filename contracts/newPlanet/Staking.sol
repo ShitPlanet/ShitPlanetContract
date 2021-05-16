@@ -6,6 +6,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/math/SafeMath.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/math/Math.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/access/Ownable.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/utils/EnumerableSet.sol";
 
 
 interface IStakingRewards {
@@ -37,6 +38,7 @@ interface IStakingRewards {
 contract StakingRewards is IStakingRewards {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -58,6 +60,9 @@ contract StakingRewards is IStakingRewards {
     uint256 private _totalMiningPower;
     mapping(address => uint256) private _balances;
     mapping(uint256 => address) public _ownerOf;
+    
+    mapping (address => EnumerableSet.UintSet) private _holderTokens;
+    
 
     /* ========== CONSTRUCTOR ========== */
     address owner = address(0x0);
@@ -76,6 +81,27 @@ contract StakingRewards is IStakingRewards {
     
     function exit() external override{
         
+    }
+    
+    function ownerOf(uint256 boxId) public view returns(address) {
+        return _ownerOf[boxId];
+    }
+    
+    function tokensOfOwner(address owner) public view returns(uint256[] memory ownerTokens) {
+        uint256 tokenCount = _holderTokens[owner].length();
+
+        if (tokenCount == 0) {
+            return new uint256[](0);
+        } else {
+            uint256[] memory result = new uint256[](tokenCount);
+            uint256 resultIndex = 0;
+            uint256 _tokenIdx;
+            for (_tokenIdx = 0; _tokenIdx < tokenCount; _tokenIdx++) {
+                result[resultIndex] = _holderTokens[owner].at(_tokenIdx);
+                resultIndex++;
+            }
+            return result;
+        }
     }
 
     function totalSupply() external override view returns (uint256) {
@@ -114,10 +140,11 @@ contract StakingRewards is IStakingRewards {
 
         shitbox.transferFrom(msg.sender, address(this), boxId);
         require(shitbox.ownerOf(boxId) == address(this),"transferFrom failed");
-
+    
         _totalMiningPower = _totalMiningPower.add(miningPower);
         _balances[msg.sender] = _balances[msg.sender].add(miningPower);
         _ownerOf[boxId] = msg.sender;
+        _holderTokens[msg.sender].add(boxId);
     }
 
     function withdraw(uint256 boxId) public override updateReward(msg.sender) {
@@ -127,6 +154,8 @@ contract StakingRewards is IStakingRewards {
         uint256 miningPower = shitbox.getMiningPower(boxId);
         _totalMiningPower = _totalMiningPower.sub(miningPower);
         _balances[msg.sender] = _balances[msg.sender].sub(miningPower);
+        _ownerOf[boxId] = address(0x0);
+        _holderTokens[msg.sender].remove(boxId);
         shitbox.transferFrom(address(this), msg.sender, boxId);
     }
 
